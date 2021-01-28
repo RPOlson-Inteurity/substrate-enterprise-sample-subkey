@@ -1,0 +1,35 @@
+image:
+  file: .gitpod.Dockerfile
+
+# List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
+ports:
+  - port: 8000
+    onOpen: open-preview
+
+# List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
+# curl https://getsubstrate.io -sSf | bash -s -- --fast
+tasks:
+  - init: |
+      curl https://sh.rustup.rs -sSf | sh -s -- -y
+      source /workspace/.cargo/env
+      rustup install nightly
+      rustup install nightly-2020-10-05
+      rustup target add wasm32-unknown-unknown --toolchain nightly-2020-10-05
+      rustup install stable
+      cargo install --force --git https://github.com/paritytech/substrate subkey
+    prebuild: |
+      cd chain
+      WASM_BUILD_TOOLCHAIN=nightly-2020-10-05 cargo build --release
+      ./target/release/enterprise-sample --dev --tmp
+  - command: |
+      cd chain
+      WASM_BUILD_TOOLCHAIN=nightly-2020-10-05 cargo build --release
+      ./target/release/enterprise-sample --dev --tmp
+  - command: |
+      cd ocw-listener
+      yarn install && yarn start
+  - command: |
+      cd ui
+      yarn install && yarn start
+  - command: |
+     echo 'Run the initialization script by using the commands "cd scripts" and "yarn && yarn start" to bootstrap a consortium, create organizations, products, and shipments, and track the shipments from creation to delivery. The initialization script is designed to work on a newly launched chain.'
